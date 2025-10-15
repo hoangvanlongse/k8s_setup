@@ -1,6 +1,6 @@
 # Use CLI linux
 
-# Master node
+# Worker node
 
 ## 1. Run .sh file
 ```sh

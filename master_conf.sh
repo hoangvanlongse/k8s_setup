@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================
 # Kubernetes Master Setup Script (Ubuntu 24.04)
-# Distributed System Lab 1
+# Distributed System Lab 1 (Fixed Version)
 # ============================
 
 set -e
@@ -48,38 +48,52 @@ EOF
 
 sudo sysctl --system
 
-echo "[6/10] Install Containerd and Kubernetes"
+echo "[6/10] Add Docker & Kubernetes repositories (fixed syntax)"
+# Clean up old files
+sudo rm -f /etc/apt/sources.list.d/docker.list
+sudo rm -f /etc/apt/sources.list.d/kubernetes.list
+
+# Docker repo
 sudo install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-echo "deb [arch=\$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \$(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+ARCH=$(dpkg --print-architecture)
+CODENAME=$(lsb_release -cs)
+echo "deb [arch=$ARCH signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $CODENAME stable" \
+| sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-sudo mkdir -p /etc/apt/keyrings
+# Kubernetes repo
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.34/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.34/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.34/deb/ /" \
+| sudo tee /etc/apt/sources.list.d/kubernetes.list > /dev/null
 
+# Update package list
 sudo apt update -y
+
+echo "[7/10] Install Containerd and Kubernetes packages"
 sudo apt install -y containerd.io kubelet kubeadm kubectl
 sudo systemctl enable containerd
 sudo systemctl enable kubelet
 
-echo "[7/10] Configure Containerd"
+echo "[8/10] Configure Containerd"
 sudo mkdir -p /etc/containerd
-containerd config default | sudo tee /etc/containerd/config.toml
-sudo sed -i 's/sandbox_image = .*/sandbox_image = "registry.k8s.io\\/pause:3.10.1"/' /etc/containerd/config.toml
+containerd config default | sudo tee /etc/containerd/config.toml > /dev/null
+# dùng dấu # thay cho / trong sed để tránh lỗi
+sudo sed -i 's#sandbox_image = .*#sandbox_image = "registry.k8s.io/pause:3.10.1"#' /etc/containerd/config.toml
 sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+
 sudo systemctl restart containerd
 
-echo "[8/10] Initialize Kubernetes master"
+
+echo "[9/10] Initialize Kubernetes master"
 sudo kubeadm init --control-plane-endpoint=$MASTER_NAME --pod-network-cidr=192.168.0.0/16
 
-echo "[9/10] Setup kubeconfig"
+echo "[10/10] Setup kubeconfig & Calico"
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-echo "[10/10] Allow master to schedule pods + install Calico"
 kubectl taint nodes $(hostname) node-role.kubernetes.io/control-plane:NoSchedule- || true
 kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.3/manifests/calico.yaml
 
 echo "✅ Master setup completed!"
-echo "👉 Run the 'kubeadm token create --print-join-command' command to get the join token for workers."
+echo "👉 Run 'kubeadm token create --print-join-command' to get the join command for workers."
