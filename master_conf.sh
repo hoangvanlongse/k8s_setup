@@ -8,9 +8,9 @@ set -e
 
 # --- CONFIG SECTION ---
 MASTER_NAME="master"
-MASTER_IP="192.168.1.10"
+MASTER_IP="192.168.1.10" # master ip
 WORKER_NAME="worker"
-WORKER_IP="192.168.1.11"
+WORKER_IP="192.168.1.11" # worker ip
 # ----------------------
 
 echo "[1/10] Update system"
@@ -97,3 +97,5 @@ kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.3/
 
 echo "✅ Master setup completed!"
 echo "👉 Run 'kubeadm token create --print-join-command' to get the join command for workers."
+
+# them luu token secret

@@ -28,6 +28,6 @@ sudo ./setup_worker.sh
 ```
 ## 2. Join cluster
 ```sh
-sudo kubeadm join 192.168.1.10:6443 --token abcdef.1234567890abcdef --discovery-token-ca-cert-hash sha256:xxxxxxxx
+sudo kubeadm join 192.168.1.10:6443 --token abcdef.1234567890abcdef(replace)--discovery-token-ca-cert-hash sha256:xxxxxxxx
 
 ```

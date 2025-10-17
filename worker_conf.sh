@@ -8,9 +8,9 @@ set -e
 
 # --- CONFIG SECTION ---
 MASTER_NAME="master"
-MASTER_IP="192.168.1.10"
+MASTER_IP="192.168.1.10" # master ip
 WORKER_NAME="worker"
-WORKER_IP="192.168.1.11"
+WORKER_IP="192.168.1.11" # worker ip
 # ----------------------
 
 echo "[1/8] Update system"
